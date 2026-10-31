@@ -11,7 +11,7 @@ O **Q-Billings** é uma plataforma inteligente e automatizada de monitoramento a
 ---
 
 ## Estrutura do Repositório
-
+```text
 qbillings/
 ├── documentacao/       # Proposta de projeto final, especificações técnicas e relatórios acadêmicos
 ├── mascaras/           # Arquivos de máscaras binárias (rasters), amostras e saídas do modelo U-Net
