@@ -18,6 +18,8 @@ qbillings/
 ├── mascaras/           # Arquivos de máscaras binárias (rasters), amostras e saídas do modelo U-Net
 ├── notebook/           # Jupyter Notebooks completos com o pipeline executável ponta a ponta
 └── README.md           # Documentação principal do repositório
+
+```
 ---
 
 ## Detalhamento Técnico do Pipeline
