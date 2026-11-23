@@ -2,11 +2,11 @@
 
 ## Visão Geral do Projeto
 
-O **Q-Billings** é uma plataforma inteligente e automatizada de monitoramento ambiental e gestão logística desenvolvida para a proteção da Área de Preservação Permanente (APP) da Represa Billings, no município de São Bernardo do Campo (SBC). O sistema resolve o gargalo de resposta rápida a infrações ambientais (desmatamento ilegal, ocupação de margens e supressão de Mata Atlântica) por meio de um pipeline ponta a ponta integrando três pilares tecnológicos:
+O **Q-Billings** é um sistema de apoio ao monitoramento e patrulhamento ambiental desenvolvido para a região do pós-balsa e entorno da Represa Billings, no município de São Bernardo do Campo (SP). O projeto estrutura um pipeline ponta a ponta, reprodutível e auditável para apoiar equipes de fiscalização e guarda ambiental na identificação de focos de degradação e no planejamento de rotas terrestres:
 
-1. **Sensoriamento Remoto & Inteligência Artificial:** Detecção automática de degradação vegetal a partir de imagens orbitais.
-2. **Geoprocessamento Espacial (GIS):** Vetorização de áreas críticas, mapeamento em coordenadas reais e construção de grafos de deslocamento.
-3. **Computação Quântica Variacional:** Roteamento otimizado de patrulhamento terrestre e náutico com foco na minimização de distância, redução de custos e menor pegada de carbono.
+1. **Sensoriamento Remoto e Segmentação Semântica:** Aquisição on-the-fly de imagens multiespectrais (Sentinel-2 L2A via catálogo STAC) e referência oficial/contingência, seguida de segmentação pixel a pixel com U-Net (ResNet-18) e filtragem hidrológica via NDWI.
+2. **Geoprocessamento e Malha Viária Real (GIS):** Vetorização dos focos em coordenadas projetadas métricas **SIRGAS 2000 / UTM zona 23S (`EPSG:31983`)**, extração de centroides e modelagem de grafo viário real com OpenStreetMap (`osmnx` + `networkx`), registrando explicitamente lacunas sem via mapeada por meio de penalidade (`FATOR_FALLBACK`).
+3. **Otimização Combinatória e Comparação de Rotas:** Formulação QUBO/Ising e execução do QAOA (Qiskit) sobre a matriz de custos em quilômetros, comparando a **Rota Q-Billings** (`51,673 km`) com estratégias clássicas e operacionais de campo.
 
 ---
 
@@ -15,44 +15,47 @@ O **Q-Billings** é uma plataforma inteligente e automatizada de monitoramento a
 ```text
 qbillings/
 ├── documentacao/       # Proposta de projeto final, especificações técnicas e relatórios acadêmicos
-├── mascaras/           # Arquivos de máscaras binárias (rasters), amostras e saídas do modelo U-Net
+├── mascaras/           # Arquivos de máscaras binárias (rasters GeoTIFF), amostras e saídas do modelo U-Net
 ├── notebook/           # Jupyter Notebooks completos com o pipeline executável ponta a ponta
 └── README.md           # Documentação principal do repositório
-
 ```
+
 ---
 
 ## Detalhamento Técnico do Pipeline
 
-### Fase 1: Sensoriamento Remoto & Segmentação Semântica (Deep Learning)
-- **Ingestão de Dados Multiespectrais:** Importação e pré-processamento de imagens orbitais do satélite Sentinel-2 sobre o pós-balsa e margens do reservatório em SBC, divididas em patches de 256x256 pixels.
-- **Arquitetura U-Net + ResNet-18:** Implementação de uma rede neural convolucional profunda (*U-Net*) acoplada ao extrator de características pré-treinado (*backbone ResNet-18*). A estrutura encoder-decoder preserva bordas e detalhes espaciais finos de degradação.
-- **Segmentação Pixel a Pixel:** Classificação contínua do terreno para isolar alterações em faixas de preservação permanente (APP) e áreas de supressão recente de Mata Atlântica.
-- **Saída Binária:** Geração de matrizes binárias (*rasters*) onde os pixels ativos (`1`) delimitam com precisão os focos de intervenção prioritária.
+### Fase 1: Sensoriamento Remoto e Segmentação Semântica (Deep Learning)
+- **Aquisição On-the-Fly via STAC e Bases Oficiais:** Consulta programática de cenas multiespectrais Sentinel-2 L2A (bandas Red, Green, Blue e NIR) por caixa delimitadora (`BBOX_4326`) via catálogo STAC (`pystac-client` / `planetary-computer`), combinada à consulta WFS de bases oficiais (como INPE/PRODES e MapBiomas) e fallback local de contingência, reprojetando a grade para `4x1024x1024` em `EPSG:31983` (`10 m` de resolução espacial).
+- **Normalização Radiométrica e Fatiamento em Patches:** Higienização de valores inválidos, normalização Min-Max por banda (`[0.0, 1.0]`) e recorte em **16 patches** não sobrepostos de `256x256` pixels com rastreio espacial `(i, j)`.
+- **Arquitetura U-Net + ResNet-18:** Treinamento e inferência de rede convolucional *U-Net* (`segmentation-models-pytorch`) com codificador *ResNet-18* adaptado para 4 canais espectrais (`in_channels=4`, `classes=1`), perda combinada (`DiceLoss` + `BCEWithLogitsLoss`), otimizador `AdamW` e limiar de sensibilidade (`LIMIAR_DEGRADACAO = 0.35`).
+- **Exclusão Hídrica (NDWI) e Exportação GeoTIFF:** Remoção de falsos positivos sobre corpos d'água via índice NDWI (`(Green - NIR) / (Green + NIR) > 0.05`), limpeza morfológica (`binary_opening` e `binary_closing`) e exportação da máscara georreferenciada `mascara_desmatamento_billings.tif` em `uint8` (`EPSG:31983`).
 
-### Fase 2: Geoprocessamento e Estruturação do Grafo Espacial (GIS)
-- **Vetorização com GeoPandas:** Conversão dos agrupamentos de pixels ativos da máscara binária em polígonos vetoriais delimitados.
-- **Sistemas de Referência Espacial (CRS):** Projetado e padronizado no sistema de coordenadas oficiais **UTM SIRGAS 2000 / Fuso 23S (EPSG:31983)** para garantir precisão métrica de terreno.
-- **Extração de Centroides:** Cálculo do centro geométrico ponderado dos polígonos para definir a localização exata dos focos de fiscalização no mapa:
-  - **Nó 0 (N0):** Base Operacional da Guarda Ambiental de São Bernardo do Campo.
-  - **Nós 1 e 2 (N1, N2):** Centroides dos focos de degradação ambiental identificados pela U-Net.
-- **Grafo Topológico no NetworkX:** Construção de um grafo ponderado e direcionado G=(V, E) alimentado pela matriz de distâncias geodésicas/euclidianas em quilômetros entre todos os pontos do circuito.
+### Fase 2: Geoprocessamento, Vetorização e Grafo Viário Real (GIS)
+- **Vetorização e Métricas em `EPSG:31983`:** Extração de polígonos conectados com `rasterio.features.shapes`, `shapely` e `geopandas` em **SIRGAS 2000 / UTM zona 23S (`EPSG:31983`)**, calculando área (`area_m2` e `area_ha`) e centroides geométricos para compor a base operacional e os focos do circuito (`130` pontos totais na cena completa e recorte principal `N0` + `N1` a `N5` para roteamento).
+- **Modelagem da Malha Viária Real (`OSMnx` + `NetworkX`):** Extração da rede viária e de trilhas do OpenStreetMap na área do pós-balsa (com margem externa de `1.500 m`) e construção de grafo direcionado e ponderado `G = (V, E)` em quilômetros (`1.243` nós e `3.049` arestas).
+- **Transparência em Áreas Sem Via Mapeada:** Cada ponto é conectado ao nó viário OSM mais próximo (`LIMIAR_VIA_M = 250.0 m`). Quando não há via cadastrada dentro do limiar, o grafo cria uma aresta explícita de fallback (`no_road_fallback`) com custo penalizado (`FATOR_FALLBACK = 3.5`), sem criar pontes artificiais.
+- **Matriz de Custos Logísticos (`130x130`):** Cálculo dos caminhos mínimos ponderados entre todos os pares de nós operacionais, gerando a matriz quadrada `matriz_distancias_km` validada numericamente.
 
-### Fase 3: Otimização Combinatória Quântica (QUBO / QAOA)
-- **Formulação do Problema do Caixeiro Viajante (TSP):** Modelação da rota de fiscalização restrita a visitar todos os alvos vetorizados (N1, N2) com partida e retorno garantidos à Base (N0).
-- **Mapeamento QUBO:** Conversão do TSP para o formato *Quadratic Unconstrained Binary Optimization*, codificando a matriz de distâncias espaciais como termo de custo e impondo penalidades quadráticas para restrições de rota.
-- **Solver Variacional QAOA:** Execução do *Quantum Approximate Optimization Algorithm* via `Qiskit Optimization` e `Qiskit Aer Simulator`. O algoritmo explora a superfície de energia do Hamiltoniano através do otimizador clássico `COBYLA` até alcançar o estado fundamental de menor custo.
-- **Resultado Operacional:** Determinação da sequência ótima de patrulhamento de menor consumo logístico: **Base (N0) -> N2 -> N1 -> Base (N0)**.
+### Fase 3: Otimização Quântica de Rotas (QUBO / QAOA) e Comparativo Operacional
+- **Formulação Combinatória e Mapeamento QUBO/Ising:** Modelagem do circuito fechado de patrulhamento partindo da Base da Guarda Ambiental (`N0`), visitando os focos prioritários (`N1` a `N5`) e retornando à base, convertido em problema QUBO e Hamiltoniano de Ising.
+- **Execução Variacional com QAOA (Qiskit):** Otimização variacional com `QAOAAnsatz`, `StatevectorEstimator` e `StatevectorSampler` (`COBYLA`), combinada à avaliação de permutações/heurísticas sobre `matriz_distancias_km` e validação frente à busca exata clássica.
+- **Comparativo de Percursos Avaliados:**
+  - **Rota Q-Billings (`51,673 km`):** Sequência consolidada `N0 -> N4 -> N5 -> N2 -> N3 -> N1 -> N0`, menor extensão entre os cenários avaliados.
+  - **Rota Dijkstra (`51,673 km`):** Encadeamento guloso por menor caminho de Dijkstra a partir de `N0` (`N0 -> N2 -> N1 -> N3 -> N5 -> N4 -> N0`), empatando em distância total.
+  - **Estrada / Eixo Viário OSM (`51,673 km`):** Priorização de aderência aos eixos viários cadastrados no OpenStreetMap, somando `51,673 km`.
+  - **Ambiental — Maior Área (`52,084 km`):** Ordenação decrescente por tamanho de mancha (`113,0 ha` em `N1` até `30,1 ha` em `N5`), com acréscimo de `+0,411 km`.
+  - **Defesa Ambiental (`66,415 km`):** Circuito estendido de fiscalização no Pós-Balsa (Taquacetuba, Tatetos, Santa Cruz, Capivari e retorno), totalizando `+14,742 km` frente à Rota Q-Billings.
 
 ---
 
 ## Tecnologias Utilizadas
 
 - **Linguagem Principal:** Python 3.10+
-- **Deep Learning & Visão Computacional:** PyTorch, Torchvision, NumPy
-- **Engenharia Geoespacial & Grafos:** GeoPandas, Shapely, Rasterio, NetworkX, SciPy
-- **Computação Quântica & Otimização:** Qiskit, Qiskit Optimization, Qiskit Algorithms, Qiskit Aer Simulator
-- **Visualização & Mapeamento:** Folium (com plugins AntPath e Esri World Imagery), Matplotlib, Seaborn
+- **Sensoriamento Remoto & Catálogo STAC:** `pystac-client`, `planetary-computer`, `rasterio`, `requests`
+- **Deep Learning & Visão Computacional:** `torch`, `torchvision`, `segmentation-models-pytorch`, `numpy`, `scipy`
+- **Geoprocessamento & Grafos Viários:** `geopandas`, `shapely`, `pyproj`, `osmnx`, `networkx`, `pandas`
+- **Computação Quântica & Otimização:** `qiskit`, `qiskit-algorithms`, `qiskit-optimization`, `qiskit-aer`
+- **Visualização & Mapeamento:** `matplotlib`, `folium`
 
 ---
 
@@ -60,26 +63,41 @@ qbillings/
 
 ### 1. Clonar o Repositório
 
-git clone https://github.com/joaohppenha/qbillings.git
+```bash
+git clone [https://github.com/joaohppenha/qbillings.git](https://github.com/joaohppenha/qbillings.git)
 cd qbillings
+```
 
 ### 2. Instalar as Dependências
 
-Em um ambiente virtual Python ou célula inicial do Colab:
+Em um ambiente virtual Python ou na primeira célula do Google Colab:
 
-pip install torch torchvision geopandas rasterio networkx qiskit qiskit-algorithms qiskit-optimization qiskit-aer folium matplotlib scipy
+```bash
+pip install rasterio segmentation-models-pytorch torch torchvision matplotlib numpy pystac-client planetary-computer geopandas shapely requests osmnx networkx pandas pyproj folium qiskit qiskit-algorithms qiskit-optimization qiskit-aer scipy
+```
 
 ### 3. Execução do Pipeline no Notebook
 
 1. Acesse o diretório `notebook/`.
 2. Abra o arquivo `.ipynb` no Jupyter Notebook ou carregue-o diretamente no **Google Colab**.
-3. Execute as células em ordem sequencial. O pipeline fará o carregamento dos patches, inferência com U-Net, geoprocessamento em UTM, otimização quântica via QAOA e renderização do mapa interativo final com a rota de patrulhamento animada.
+3. Execute as células em ordem sequencial. O pipeline realizará a aquisição da cena multiespectral via STAC, segmentação com U-Net (ResNet-18) e filtro NDWI, vetorização em `EPSG:31983`, extração da malha viária OSM e cálculo da matriz de custos (`130x130`), otimização via QAOA e geração dos mapas comparativos de rotas.
+
+---
+
+## Próximos Passos do Projeto Q-Billings
+
+Para os próximos passos do **Projeto Q-Billings** na região do pós-balsa da Represa Billings (São Bernardo do Campo, `EPSG:31983`), o foco será:
+
+- **Consolidação de fontes oficiais e cache local:** Ajustar e estabilizar a consulta programática a camadas oficiais (como MapBiomas, INPE/PRODES e bases territoriais da APRM-Billings/SEMIL/DataGeo/GeoSampa), mantendo cache e fallback local para evitar falhas de rede ou respostas `400` durante execuções e demonstrações.
+- **Complementação da malha viária e detecção de acessos:** Contribuir com o mapeamento colaborativo de vias, estradas vicinais e trilhas no OpenStreetMap (`OSM`) na região do pós-balsa e avaliar modelos de detecção de vias a partir de sensoriamento remoto para reduzir trechos de fallback (`FATOR_FALLBACK`) em áreas de margem e manancial.
+- **Ampliação da otimização clássica e quântica:** Comparar o circuito consolidado (`Rota Q-Billings`, `51,673 km`) com solvers clássicos dedicados de roteamento (como TSP/VRP) e expandir os testes do QAOA em Qiskit (incluindo análise de profundidade, ruído ou backends simulados/reais) sobre a matriz `matriz_distancias_km`.
+- **Generalização territorial e operabilidade:** Validar a mesma arquitetura em diferentes recortes geográficos e cenários operacionais (incluindo malhas mais adensadas e camadas interativas em `folium`).
 
 ---
 
 ## Impacto e Resultados Práticos
 
-- **Precisão Geográfica:** Identificação pontual e automatizada de supressões vegetais em Áreas de Preservação Permanente (APP) ao longo do manancial da Billings.
-- **Eficiência Logística:** Minimização comprovada do tempo e da distância percorrida pelas equipes terrestres e náuticas da Guarda Ambiental.
-- **Sustentabilidade Operacional:** Redução direta no consumo de combustível e diminuição da pegada de carbono dos veículos de fiscalização municipal.
-- **Contribuição aos ODS:** Alinhamento direto às metas do **ODS 6** (Água Potável e Saneamento) e **ODS 15** (Vida Terrestre) da Agenda 2030 das Nações Unidas.
+- **Precisão Geográfica e Cartográfica:** Identificação automatizada de focos com exclusão de corpos hídricos (NDWI) e padronização integral no sistema oficial brasileiro **SIRGAS 2000 / UTM 23S (`EPSG:31983`)**.
+- **Roteamento Realista e Auditável:** Integração com a malha viária real do OpenStreetMap e tratamento transparente de trechos sem estrada mapeada (`FATOR_FALLBACK`), evitando rotas irreais em linha reta sobre a represa.
+- **Eficiência Operacional:** Consolidação de circuito de patrulhamento com **51,673 km**, reduzindo deslocamentos desnecessários, tempo de equipe em campo, consumo de combustível e emissões operacionais.
+- **Alinhamento aos ODS:** Contribuição direta às metas do **ODS 6** (Água Potável e Saneamento), **ODS 11** (Cidades e Comunidades Sustentáveis) e **ODS 15** (Vida Terrestre) da Agenda 2030 da ONU.
