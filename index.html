@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Q-Billings // Monitoramento Orbital e Roteamento Quântico — SBC</title>
   <meta name="description" content="Pipeline híbrido de sensoriamento remoto (Sentinel-2 + U-Net + NDWI), grafo viário real (OSMnx/NetworkX) e otimização quântica (QUBO/QAOA) na Represa Billings em São Bernardo do Campo." />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    crossorigin=""
+  />
   <style>
     :root {
       --bg: #f6f7f5;
@@ -39,11 +44,10 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Barra superior técnica */
     .topbar {
       position: sticky;
       top: 0;
-      z-index: 50;
+      z-index: 500;
       background: var(--bg);
       border-bottom: 1.5px solid var(--border);
       display: flex;
@@ -99,7 +103,6 @@
       background: var(--surface);
     }
 
-    /* Hero */
     .hero {
       padding: 3.5rem 2.5rem 3rem;
       border-bottom: 1.5px solid var(--border);
@@ -170,7 +173,6 @@
       color: #08140e;
     }
 
-    /* KPI Strip */
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -206,7 +208,6 @@
       margin-top: 0.35rem;
     }
 
-    /* Seções */
     section {
       padding: 3rem 2.5rem;
       border-bottom: 1.5px solid var(--border);
@@ -242,12 +243,6 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 1.5rem;
-    }
-
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.25rem;
     }
 
     .box {
@@ -289,6 +284,60 @@
       color: var(--ink);
     }
 
+    /* Mapa Interativo Leaflet */
+    .map-frame {
+      border: 1.5px solid var(--border);
+      background: var(--surface-alt);
+    }
+
+    .map-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding: 0.85rem 1.1rem;
+      border-bottom: 1.5px solid var(--border);
+      background: var(--bg);
+      font-family: var(--mono);
+      font-size: 0.8rem;
+    }
+
+    .map-controls {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .map-btn {
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 0.4rem 0.75rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+    }
+
+    .map-btn.active {
+      background: var(--ink);
+      color: var(--accent);
+    }
+
+    #billings-map {
+      width: 100%;
+      height: 430px;
+      z-index: 1;
+    }
+
+    .map-caption {
+      padding: 0.75rem 1.1rem;
+      border-top: 1px solid var(--border-soft);
+      font-size: 0.84rem;
+      color: var(--ink-muted);
+      background: var(--surface);
+    }
+
     /* Pipeline Tabs */
     .phase-tabs {
       display: flex;
@@ -321,17 +370,20 @@
 
     .phase-panel.active {
       display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
+      grid-template-columns: 1.05fr 0.95fr;
       gap: 1.75rem;
       align-items: start;
     }
 
-    @media (max-width: 820px) {
+    @media (max-width: 860px) {
       .phase-panel.active {
         grid-template-columns: 1fr;
       }
       .hero, section {
         padding: 2rem 1.25rem;
+      }
+      #billings-map {
+        height: 340px;
       }
     }
 
@@ -347,26 +399,68 @@
       font-size: 0.92rem;
     }
 
-    .diagram-box {
+    .evidence-card {
       border: 1.5px solid var(--border);
       background: var(--bg);
-      padding: 1.1rem;
+      padding: 0.9rem;
+    }
+
+    .evidence-label {
       font-family: var(--mono);
-      font-size: 0.8rem;
-    }
-
-    .diagram-step {
-      border: 1px solid var(--border);
-      background: var(--surface);
-      padding: 0.65rem 0.8rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .diagram-arrow {
-      text-align: center;
+      font-size: 0.74rem;
       font-weight: 700;
-      margin-bottom: 0.5rem;
-      color: var(--accent);
+      margin-bottom: 0.6rem;
+      display: block;
+      color: var(--ink);
+    }
+
+    .evidence-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border: 1px solid var(--border-soft);
+      background: var(--surface);
+    }
+
+    .evidence-note {
+      font-size: 0.8rem;
+      color: var(--ink-muted);
+      margin-top: 0.6rem;
+    }
+
+    /* Galeria Visual Consolidada (Opção 3) */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.75rem;
+    }
+
+    .gallery-item {
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      padding: 0.85rem;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      display: block;
+      border: 1px solid var(--border-soft);
+      margin-bottom: 0.65rem;
+    }
+
+    .gallery-title {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .gallery-desc {
+      font-size: 0.84rem;
+      color: var(--ink-muted);
     }
 
     /* Tabela de Rotas */
@@ -441,7 +535,6 @@
       padding: 0.9rem;
     }
 
-    /* Clone bar */
     .clone-bar {
       display: flex;
       justify-content: space-between;
@@ -483,9 +576,10 @@
     </div>
     <nav class="nav-links">
       <a href="#contexto">01.Contexto</a>
-      <a href="#arquitetura">02.Pipeline</a>
-      <a href="#resultados">03.Resultados</a>
-      <a href="#reprodutibilidade">04.Código</a>
+      <a href="#mapa-interativo">02.Mapa</a>
+      <a href="#arquitetura">03.Pipeline</a>
+      <a href="#resultados">04.Resultados</a>
+      <a href="#reprodutibilidade">05.Código</a>
     </nav>
   </header>
 
@@ -504,11 +598,11 @@
         <a class="btn btn-primary" href="https://github.com/joaohppenha/qbillings" target="_blank" rel="noopener">
           Repositório GitHub ↗
         </a>
+        <a class="btn" href="#mapa-interativo">
+          Explorar Mapa
+        </a>
         <a class="btn" href="#resultados">
           Ver Comparativo de Rotas
-        </a>
-        <a class="btn" href="#reprodutibilidade">
-          Executar Pipeline
         </a>
       </div>
 
@@ -565,10 +659,39 @@
       </div>
     </section>
 
-    <!-- 02. ARQUITETURA EM 3 FASES -->
+    <!-- 02. MAPA INTERATIVO LEAFLET (OPÇÃO 2) -->
+    <section id="mapa-interativo">
+      <div class="sec-header">
+        <h2>02. Mapa Interativo — Pós-Balsa / Represa Billings</h2>
+        <span class="sec-tag">LEAFLET · OPENSTREETMAP</span>
+      </div>
+
+      <div class="map-frame">
+        <div class="map-toolbar">
+          <span>CAMADAS OPERACIONAIS · BASE N0 + FOCOS PRIORITÁRIOS</span>
+          <div class="map-controls">
+            <button class="map-btn active" id="btnRouteOptimal" onclick="setRouteMode('optimal', this)">
+              Rota Q-Billings (51,673 km)
+            </button>
+            <button class="map-btn" id="btnRouteArea" onclick="setRouteMode('area', this)">
+              Maior Área (52,084 km)
+            </button>
+            <button class="map-btn" id="btnBothRoutes" onclick="setRouteMode('both', this)">
+              Comparar Ambas
+            </button>
+          </div>
+        </div>
+        <div id="billings-map"></div>
+        <div class="map-caption">
+          Clique nos marcadores para inspecionar a base operacional (<code>N0</code>) e os focos prioritários (<code>N1</code> a <code>N5</code>) na região do Pós-Balsa em São Bernardo do Campo.
+        </div>
+      </div>
+    </section>
+
+    <!-- 03. ARQUITETURA EM 3 FASES + EVIDÊNCIAS VISUAIS (OPÇÃO 3) -->
     <section id="arquitetura">
       <div class="sec-header">
-        <h2>02. Arquitetura Híbrida em Três Fases</h2>
+        <h2>03. Arquitetura Híbrida e Evidências Visuais</h2>
         <span class="sec-tag">SIRGAS 2000 / UTM 23S</span>
       </div>
 
@@ -592,16 +715,13 @@
             <li><strong>Filtro NDWI &amp; Morfologia:</strong> supressão de água via <code>(B03 - B08) / (B03 + B08)</code> e exportação da máscara <code>mascara_desmatamento_billings.tif</code>.</li>
           </ul>
         </div>
-        <div class="diagram-box">
-          <div class="diagram-step">[INPUT] Catálogo STAC · Sentinel-2 L2A (B02, B03, B04, B08)</div>
-          <div class="diagram-arrow">↓</div>
-          <div class="diagram-step">[PRE-PROC] Reprojeção EPSG:31983 · Patches 256×256 px</div>
-          <div class="diagram-arrow">↓</div>
-          <div class="diagram-step">[DEEP LEARNING] U-Net + Backbone ResNet-18</div>
-          <div class="diagram-arrow">↓</div>
-          <div class="diagram-step">[FILTRO HÍDRICO] Máscara NDWI + Limpeza Morfológica</div>
-          <div class="diagram-arrow">↓</div>
-          <div class="diagram-step"><strong>[OUTPUT]</strong> GeoTIFF Binário de Focos Candidatos</div>
+        <div class="evidence-card">
+          <span class="evidence-label">[FIG 01] COMPOSIÇÃO RGB REALÇADA vs. MÁSCARA U-NET + NDWI</span>
+          <!-- Ajuste o src abaixo para o caminho exato da sua imagem da Fase 1 no repositório -->
+          <img src="assets/fase1-rgb-mascara.png" alt="Composição RGB do Pós-Balsa e Máscara Operacional Segmentada U-Net ResNet-18" />
+          <p class="evidence-note">
+            Separação entre vegetação íntegra, braços hídricos filtrados via NDWI e manchas candidatas de degradação.
+          </p>
         </div>
       </div>
 
@@ -619,16 +739,13 @@
             <li><strong>Penalidade Off-Road:</strong> trechos sem estrada mapeada recebem aresta auditável ponderada por <code>FATOR_FALLBACK = 3,5</code>, gerando a matriz de custos em km.</li>
           </ul>
         </div>
-        <div class="diagram-box">
-          <div class="diagram-step">[INPUT] Máscara GeoTIFF + Base Operacional (N0)</div>
-          <div class="diagram-arrow">↓</div>
-          <div class="diagram-step">[VETOR] Polígonos &gt; 1,0 ha · Centroides N1..N8 (ha)</div>
-          <div class="diagram-arrow">↓</div>
-          <div class="diagram-step">[OSM GRAPH] 1.243 nós · 3.049 arestas · Snap ≤ 250 m</div>
-          <div class="diagram-arrow">↓</div>
-          <div class="diagram-step">[FALLBACK] Penalização explícita 3,5× sem via mapeada</div>
-          <div class="diagram-arrow">↓</div>
-          <div class="diagram-step"><strong>[OUTPUT]</strong> Matriz Simétrica de Distâncias Reais (km)</div>
+        <div class="evidence-card">
+          <span class="evidence-label">[FIG 02] GRAFO VIÁRIO / ESPACIAL (TOP 8 FOCOS + BASE N0)</span>
+          <!-- Ajuste o src abaixo para o caminho exato da sua imagem da Fase 2 no repositório -->
+          <img src="assets/fase2-grafo-viario.png" alt="Grafo Viário e Espacial em SIRGAS 2000 UTM 23S EPSG:31983" />
+          <p class="evidence-note">
+            Traçado sobre a malha viária real contornando a represa em <code>EPSG:31983</code> com distâncias acumuladas e fallback explícito.
+          </p>
         </div>
       </div>
 
@@ -646,24 +763,40 @@
             <li><strong>Validação Multi-Cenário:</strong> confronto direto contra Dijkstra exato, aderência aos eixos OSM, priorização por área degradada e circuito estendido.</li>
           </ul>
         </div>
-        <div class="diagram-box">
-          <div class="diagram-step">[INPUT] Submatriz Operacional (Base N0 + Focos N1..N5)</div>
-          <div class="diagram-arrow">↓</div>
-          <div class="diagram-step">[QUBO] Função Objetivo TSP + Penalidades A, B</div>
-          <div class="diagram-arrow">↓</div>
-          <div class="diagram-step">[ISING] Mapeamento para Hamiltoniano Quântico</div>
-          <div class="diagram-arrow">↓</div>
-          <div class="diagram-step">[QAOA] Circuito Variacional Qiskit + Otimizador COBYLA</div>
-          <div class="diagram-arrow">↓</div>
-          <div class="diagram-step"><strong>[OUTPUT]</strong> Rota Ótima: N0→N4→N5→N2→N3→N1→N0 (51,673 km)</div>
+        <div class="evidence-card">
+          <span class="evidence-label">[FIG 03] COMPARATIVO DE ROTAS EM EPSG:31983</span>
+          <!-- Ajuste o src abaixo para o caminho exato da sua imagem da Fase 3 no repositório -->
+          <img src="assets/fase3-comparativo-rotas.png" alt="Comparativo de Rotas Q-Billings, Dijkstra, Ambiental, Defesa e Estrada" />
+          <p class="evidence-note">
+            Comparação visual entre a Rota Q-Billings (<code>51,673 km</code>), priorização por área (<code>52,084 km</code>) e defesa ambiental (<code>66,415 km</code>).
+          </p>
+        </div>
+      </div>
+
+      <!-- Galeria em Grade das 3 Evidências -->
+      <div class="gallery-grid">
+        <div class="gallery-item">
+          <img src="assets/fase1-rgb-mascara.png" alt="Etapa 1: Sensoriamento Remoto e Segmentação" />
+          <div class="gallery-title">01 // Detecção Orbital + NDWI</div>
+          <div class="gallery-desc">Sentinel-2 L2A, segmentação U-Net/ResNet-18 e remoção de falsos positivos sobre a represa.</div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/fase2-grafo-viario.png" alt="Etapa 2: Grafo Viário Real" />
+          <div class="gallery-title">02 // Grafo Viário EPSG:31983</div>
+          <div class="gallery-desc">Malha OpenStreetMap (1.243 nós, 3.049 arestas), snap de 250 m e penalidade FATOR_FALLBACK = 3,5.</div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/fase3-comparativo-rotas.png" alt="Etapa 3: Comparativo de Rotas" />
+          <div class="gallery-title">03 // Circuito QUBO / QAOA</div>
+          <div class="gallery-desc">Sequência N0→N4→N5→N2→N3→N1→N0 com 51,673 km e economia de 14,742 km por ronda.</div>
         </div>
       </div>
     </section>
 
-    <!-- 03. RESULTADOS -->
+    <!-- 04. RESULTADOS -->
     <section id="resultados">
       <div class="sec-header">
-        <h2>03. Comparativo Quantitativo das Rotas</h2>
+        <h2>04. Comparativo Quantitativo das Rotas</h2>
         <span class="sec-tag">ESTUDO DE CASO · PÓS-BALSA</span>
       </div>
 
@@ -718,7 +851,6 @@
         </table>
       </div>
 
-      <!-- Simulador de Economia -->
       <div class="simulator">
         <div>
           <h3>Simulador de Economia Operacional em Campo</h3>
@@ -747,10 +879,10 @@
       </div>
     </section>
 
-    <!-- 04. REPRODUTIBILIDADE E PRÓXIMOS PASSOS -->
+    <!-- 05. REPRODUTIBILIDADE E PRÓXIMOS PASSOS -->
     <section id="reprodutibilidade">
       <div class="sec-header">
-        <h2>04. Reprodutibilidade e Próximos Passos</h2>
+        <h2>05. Reprodutibilidade e Próximos Passos</h2>
         <span class="sec-tag">OPEN SOURCE · MIT / CC</span>
       </div>
 
@@ -764,7 +896,7 @@
           </ul>
           <div class="clone-bar">
             <span id="cloneCmd">git clone https://github.com/joaohppenha/qbillings.git</span>
-            <button class="btn btn-primary" style="padding: 0.4rem 0.75rem; font-size: 0.78rem;" onclick="copyClone()">
+            <button class="btn btn-primary" style="padding: 0.4rem 0.75rem; font-size: 0.78rem;" onclick="copyClone(this)">
               Copiar
             </button>
           </div>
@@ -792,7 +924,74 @@
     </footer>
   </main>
 
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    crossorigin=""
+  ></script>
   <script>
+    // Pontos ilustrativos de referência no Pós-Balsa / Represa Billings (SBC - SP)
+    // Substitua pelas coordenadas exatas extraídas do seu notebook em WGS84 (lat, lon)
+    const pontos = [
+      { id: 'N0', nome: 'Base Operacional (N0)', area: 'Base', coords: [-23.8165, -46.5320], base: true },
+      { id: 'N1', nome: 'Foco N1 (Maior Área)', area: '113,0 ha', coords: [-23.8410, -46.5120] },
+      { id: 'N2', nome: 'Foco N2', area: '84,3 ha', coords: [-23.8315, -46.5110] },
+      { id: 'N3', nome: 'Foco N3', area: '71,5 ha', coords: [-23.8380, -46.4945] },
+      { id: 'N4', nome: 'Foco N4', area: '49,7 ha', coords: [-23.7920, -46.5540] },
+      { id: 'N5', nome: 'Foco N5', area: '30,1 ha', coords: [-23.7995, -46.5375] }
+    ];
+
+    const byId = Object.fromEntries(pontos.map(p => [p.id, p]));
+    const seqOtima = ['N0', 'N4', 'N5', 'N2', 'N3', 'N1', 'N0'];
+    const seqMaiorArea = ['N0', 'N1', 'N5', 'N2', 'N3', 'N4', 'N0'];
+
+    const map = L.map('billings-map').setView([-23.818, -46.526], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    pontos.forEach(p => {
+      L.circleMarker(p.coords, {
+        radius: p.base ? 9 : 7,
+        color: '#111312',
+        weight: 2,
+        fillColor: p.base ? '#00a86b' : '#e85d75',
+        fillOpacity: 0.95
+      })
+        .addTo(map)
+        .bindPopup(`<strong>${p.nome}</strong><br/>Referência: ${p.area}`);
+    });
+
+    const optimalLine = L.polyline(seqOtima.map(id => byId[id].coords), {
+      color: '#00a86b',
+      weight: 4,
+      opacity: 0.92
+    });
+
+    const areaLine = L.polyline(seqMaiorArea.map(id => byId[id].coords), {
+      color: '#d94e1f',
+      weight: 3,
+      dashArray: '6, 6',
+      opacity: 0.85
+    });
+
+    const routeGroup = L.layerGroup([optimalLine]).addTo(map);
+
+    function setRouteMode(mode, btn) {
+      document.querySelectorAll('.map-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      routeGroup.clearLayers();
+      if (mode === 'optimal') {
+        routeGroup.addLayer(optimalLine);
+      } else if (mode === 'area') {
+        routeGroup.addLayer(areaLine);
+      } else {
+        routeGroup.addLayer(areaLine);
+        routeGroup.addLayer(optimalLine);
+      }
+    }
+
     function openPhase(phaseId, btn) {
       document.querySelectorAll('.phase-panel').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -810,10 +1009,9 @@
       document.getElementById('kmAno').textContent = anual + ' km';
     }
 
-    function copyClone() {
+    function copyClone(btn) {
       const cmd = document.getElementById('cloneCmd').textContent;
       navigator.clipboard.writeText(cmd).then(() => {
-        const btn = event.target;
         const orig = btn.textContent;
         btn.textContent = 'Copiado!';
         setTimeout(() => { btn.textContent = orig; }, 1600);
