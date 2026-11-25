@@ -1,5 +1,7 @@
 # Q-Billings: Monitoramento Espacial de Mananciais e Otimização Quântica de Patrulhamento Ambiental em São Bernardo do Campo
 
+Projeto Capstone do FTLB-2026 - Spacetech bootcamp - UNDP + AEB
+
 ## Visão Geral do Projeto
 
 O **Q-Billings** é um sistema de apoio ao monitoramento e patrulhamento ambiental desenvolvido para a região do pós-balsa e entorno da Represa Billings, no município de São Bernardo do Campo (SP). O projeto estrutura um pipeline ponta a ponta, reprodutível e auditável para apoiar equipes de fiscalização e guarda ambiental na identificação de focos de degradação e no planejamento de rotas terrestres:
