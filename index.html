@@ -342,4 +342,410 @@
     .phase-tabs {
       display: flex;
       gap: 0.5rem;
-      flex-wrap:
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+
+    .tab-btn {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.65rem 1rem;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: var(--ink);
+      color: var(--accent);
+    }
+
+    .phase-panel {
+      display: none;
+      border: 1.5px solid var(--border);
+      padding: 1.75rem;
+      background: var(--surface);
+    }
+
+    .phase-panel.active {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 1.75rem;
+      align-items: start;
+    }
+
+    @media (max-width: 860px) {
+      .phase-panel.active {
+        grid-template-columns: 1fr;
+      }
+      .hero, section {
+        padding: 2rem 1.25rem;
+      }
+      #billings-map {
+        height: 340px;
+      }
+    }
+
+    .spec-list {
+      list-style: none;
+      padding: 0;
+      margin-top: 1rem;
+    }
+
+    .spec-list li {
+      padding: 0.6rem 0;
+      border-top: 1px solid var(--border-soft);
+      font-size: 0.92rem;
+    }
+
+    .evidence-card {
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      padding: 0.9rem;
+    }
+
+    .evidence-label {
+      font-family: var(--mono);
+      font-size: 0.74rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+      display: block;
+      color: var(--ink);
+    }
+
+    .evidence-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border: 1px solid var(--border-soft);
+      background: var(--surface);
+    }
+
+    .evidence-note {
+      font-size: 0.8rem;
+      color: var(--ink-muted);
+      margin-top: 0.6rem;
+    }
+
+    /* Galeria Visual Consolidada */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.75rem;
+    }
+
+    .gallery-item {
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      padding: 0.85rem;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      display: block;
+      border: 1px solid var(--border-soft);
+      margin-bottom: 0.65rem;
+    }
+
+    .gallery-title {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .gallery-desc {
+      font-size: 0.84rem;
+      color: var(--ink-muted);
+    }
+
+    /* Tabela de Rotas */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1.5px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      padding: 0.85rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    th {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      background: var(--ink);
+      color: #ffffff;
+    }
+
+    tr.highlight-row {
+      background: var(--accent-soft);
+      font-weight: 600;
+    }
+
+    .mono-cell {
+      font-family: var(--mono);
+      font-size: 0.84rem;
+    }
+
+    /* Simulador de Impacto */
+    .simulator {
+      border: 1.5px solid var(--border);
+      padding: 1.5rem;
+      background: var(--surface-alt);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    @media (max-width: 760px) {
+      .simulator {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      margin: 0.75rem 0;
+    }
+
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.85rem;
+    }
+
+    .sim-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      padding: 0.9rem;
+    }
+
+    .clone-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      border: 1.5px solid var(--border);
+      background: var(--ink);
+      color: #f6f7f5;
+      padding: 0.85rem 1.1rem;
+      font-family: var(--mono);
+      font-size: 0.84rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    footer {
+      padding: 2rem 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--ink-muted);
+    }
+
+    footer a {
+      color: var(--ink);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span>Q-BILLINGS // SBC-SP</span>
+    </div>
+    <nav class="nav-links">
+      <a href="#contexto">01.Contexto</a>
+      <a href="#arquitetura">02.Pipeline</a>
+      <a href="#mapa-interativo">03.Mapa</a>
+      <a href="#resultados">04.Resultados</a>
+      <a href="#reprodutibilidade">05.Código</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- HERO -->
+    <div class="hero">
+      <span class="eyebrow">FTL Brasil · Space Tech Bootcamp 2026 · EPSG:31983</span>
+      <h1>Monitoramento Orbital de Mananciais e Roteamento Quântico na Represa Billings</h1>
+      <p class="hero-sub">
+        Pipeline aberto em três fases que integra segmentação semântica por Deep Learning (Sentinel-2 + U-Net/ResNet-18 + NDWI),
+        grafo viário real do OpenStreetMap e otimização combinatória via QUBO/QAOA para patrulhamento ambiental no Pós-Balsa,
+        em São Bernardo do Campo (SP).
+      </p>
+
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="https://github.com/joaohppenha/qbillings" target="_blank" rel="noopener">
+          Repositório GitHub ↗
+        </a>
+        <a class="btn" href="#mapa-interativo">
+          Explorar Mapa
+        </a>
+        <a class="btn" href="#resultados">
+          Ver Comparativo de Rotas
+        </a>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Rota Q-Billings (QAOA)</div>
+          <div class="kpi-value">51,673 km</div>
+          <div class="kpi-note">Ótimo global igualado ao Dijkstra</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Economia por Ronda</div>
+          <div class="kpi-value">-14,742 km</div>
+          <div class="kpi-note">Redução de 22,2% vs. circuito estendido</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Grafo Viário Real (OSM)</div>
+          <div class="kpi-value">1.243 nós</div>
+          <div class="kpi-note">3.049 arestas · Snap ≤ 250 m</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Transparência Off-Road</div>
+          <div class="kpi-value">3,5×</div>
+          <div class="kpi-note">Parâmetro <code>FATOR_FALLBACK</code> explícito</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 01. CONTEXTO E PROBLEMA -->
+    <section id="contexto">
+      <div class="sec-header">
+        <h2>01. Território e Gargalo Operacional</h2>
+        <span class="sec-tag">ODS 6 · ODS 15 · APRM-BILLINGS</span>
+      </div>
+
+      <div class="grid-2">
+        <div class="box">
+          <h3>Contraste Urbano-Ambiental em São Bernardo do Campo</h3>
+          <p>
+            Enquanto o norte de São Bernardo do Campo concentra o eixo urbano e industrial consolidado,
+            a porção sul — especialmente a região do <strong>Pós-Balsa</strong> — abriga remanescentes contínuos de
+            Mata Atlântica e os braços da <strong>Represa Billings</strong>, manancial estratégico protegido pela
+            APRM-Billings e pelas Áreas de Preservação Permanente (APPs).
+          </p>
+        </div>
+
+        <div class="box box-alt">
+          <h3>Três Barreiras na Fiscalização Terrestre</h3>
+          <ul>
+            <li><strong>Detecção tardia:</strong> área extensa, densa e recortada pela represa dificulta inspeções pontuais contínuas.</li>
+            <li><strong>Mapas incompletos:</strong> linhas retas ignoram braços d'água e estradas vicinais não mapeadas geram trajetos irreais.</li>
+            <li><strong>Perda de eficiência:</strong> sequenciamento empírico eleva quilometragem, tempo de resposta e gasto de combustível.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02. ARQUITETURA EM 3 FASES + EVIDÊNCIAS VISUAIS -->
+    <section id="arquitetura">
+      <div class="sec-header">
+        <h2>02. Arquitetura Híbrida e Evidências Visuais</h2>
+        <span class="sec-tag">SIRGAS 2000 / UTM 23S</span>
+      </div>
+
+      <div class="phase-tabs" role="tablist">
+        <button class="tab-btn active" onclick="openPhase('f1', this)">FASE 01 // Detecção Orbital + IA</button>
+        <button class="tab-btn" onclick="openPhase('f2', this)">FASE 02 // Geoprocessamento + Grafo</button>
+        <button class="tab-btn" onclick="openPhase('f3', this)">FASE 03 // Otimização QUBO / QAOA</button>
+      </div>
+
+      <!-- FASE 1 -->
+      <div id="f1" class="phase-panel active">
+        <div>
+          <h3>Detecção Orbital com IA e Filtro Hídrico</h3>
+          <p>
+            Identifica áreas candidatas a supressão vegetal ou alteração de cobertura do solo a partir de imagens
+            multiespectrais orbitais, eliminando falsos positivos causados pelos espelhos d'água recortados da represa.
+          </p>
+          <ul class="spec-list">
+            <li><strong>Aquisição STAC:</strong> cenas Sentinel-2 L2A (bandas B02, B03, B04 e B08 a 10 m) reprojetadas para <code>EPSG:31983</code>.</li>
+            <li><strong>Segmentação Semântica:</strong> rede neural <code>U-Net</code> com codificador <code>ResNet-18</code> aplicada em patches de <code>256×256</code> pixels.</li>
+            <li><strong>Filtro NDWI &amp; Morfologia:</strong> supressão de água via <code>(B03 - B08) / (B03 + B08)</code> e exportação da máscara <code>mascara_desmatamento_billings.tif</code>.</li>
+          </ul>
+        </div>
+        <div class="evidence-card">
+          <span class="evidence-label">[FIG 01] COMPOSIÇÃO RGB REALÇADA vs. MÁSCARA U-NET + NDWI</span>
+          <!-- Ajuste o src abaixo para o caminho exato da sua imagem da Fase 1 no repositório -->
+          <img src="assets/fase1-rgb-mascara.png" alt="Composição RGB do Pós-Balsa e Máscara Operacional Segmentada U-Net ResNet-18" />
+          <p class="evidence-note">
+            Separação entre vegetação íntegra, braços hídricos filtrados via NDWI e manchas candidatas de degradação.
+          </p>
+        </div>
+      </div>
+
+      <!-- FASE 2 -->
+      <div id="f2" class="phase-panel">
+        <div>
+          <h3>Geoprocessamento e Grafo Viário Real</h3>
+          <p>
+            Converte a máscara raster em alvos georreferenciados mensuráveis e modela os deslocamentos terrestres
+            sobre a malha viária real do OpenStreetMap sem atravessar corpos d'água artificialmente.
+          </p>
+          <ul class="spec-list">
+            <li><strong>Vetorização Métrica:</strong> polígonos via <code>GeoPandas</code> em <code>EPSG:31983</code>, cálculo de área em hectares e centroides (<code>N1</code> a <code>N8</code>) + base <code>N0</code>.</li>
+            <li><strong>Rede Viária Real:</strong> topologia extraída via <code>OSMnx</code> e <code>NetworkX</code> (<code>1.243</code> nós e <code>3.049</code> arestas) com ancoragem (<em>snap</em>) em até <code>250 m</code>.</li>
+            <li><strong>Penalidade Off-Road:</strong> trechos sem estrada mapeada recebem aresta auditável ponderada por <code>FATOR_FALLBACK = 3,5</code>, gerando a matriz de custos em km.</li>
+          </ul>
+        </div>
+        <div class="evidence-card">
+          <span class="evidence-label">[FIG 02] GRAFO VIÁRIO / ESPACIAL (TOP 8 FOCOS + BASE N0)</span>
+          <!-- Ajuste o src abaixo para o caminho exato da sua imagem da Fase 2 no repositório -->
+          <img src="assets/fase2-grafo-viario.png" alt="Grafo Viário e Espacial em SIRGAS 2000 UTM 23S EPSG:31983" />
+          <p class="evidence-note">
+            Traçado sobre a malha viária real contornando a represa em <code>EPSG:31983</code> com distâncias acumuladas e fallback explícito.
+          </p>
+        </div>
+      </div>
+
+      <!-- FASE 3 -->
+      <div id="f3" class="phase-panel">
+        <div>
+          <h3>Otimização de Rotas e Apoio à Decisão</h3>
+          <p>
+            Formula o circuito fechado de fiscalização — partindo da base <code>N0</code>, visitando os focos prioritários
+            e retornando à base — como um problema combinatório resolvido via computação quântica variacional.
+          </p>
+          <ul class="spec-list">
+            <li><strong>Formulação QUBO / Ising:</strong> modelagem TSP com restrições quadráticas de unicidade convertida para operadores Pauli-Z.</li>
+            <li><strong>Solver QAOA (Qiskit):</strong> execução com <code>QAOAAnsatz</code>, <code>StatevectorEstimator</code>, <code>StatevectorSampler</code> e otimizador clássico <code>COBYLA</code>.</li>
+            <li><strong>Validação Multi-Cenário:</strong> confronto direto contra Dijkstra exato, priorização por área degradada e circuito estendido.</li>
+          </ul>
+        </div>
+        <div class="evidence-card">
+          <span class="evidence-label">[FIG 03] COMPARATIVO DE ROTAS EM EPSG:31983</span>
+          <!-- Ajuste o src abaixo para o caminho exato da sua imagem da Fase 3 no repositório -->
+          <img src="assets/fase3-comparativo-rotas.png" alt="Comparativo de Rotas Q-Billings, Dijkstra, Ambiental e Defesa" />
+          <p class="evidence-note">
+            Comparação visual entre a Rota Q-Billings (<code>51,673 km</code>), priorização por área (<code>52,084 km</code>) e defesa ambiental (<code>66,415 km</code>).
+          </p>
+        </div>
+      </div>
+
+      <!-- Galeria em Grade das 3 Evidências -->
+      <div class="gallery-grid">
+        <div class="gallery-item">
+          <img src="assets/fase1-rgb-mascara.png" alt="Etapa 1: Sensoriamento Remoto e Segmentação" />
+          <div class="gallery-
